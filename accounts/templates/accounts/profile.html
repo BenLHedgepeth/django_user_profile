@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+    <div class="profile_block">
+        {% if not profile.avatar %}
+        {% else %}
+            <div class="img_block">
+                <img class="img_block" src="{{ profile.avatar.url}}">
+            </div>
+        {% endif %}
+
+        <h1>{{ profile.user }}</h1>
+
+        <h2>Name</h2>
+        <h3 class="user_info">{{ profile.user.get_full_name }}</h3>
+
+        <h2>Email</h2>
+        <h3 class="user_info">{{ profile.user.email }}</h3>
+
+        <h2>Bio</h2>
+        <h3 class="user_info">{{ profile.bio }}</h3>
+        <a class="edit_anchor" href="{% url 'accounts:edit_profile' username=user %}">Edit Profile</a>    
+    </div>
+{% endblock %}

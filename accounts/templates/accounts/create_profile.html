@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+
+
+{% block body %}
+    <form enctype="multipart/form-data" action="{% url 'accounts:new_profile' username=user %}" method="post">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit">Submit</button>
+    </form>  
+{% endblock %}
