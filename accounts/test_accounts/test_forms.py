@@ -15,7 +15,7 @@ from ..forms import UserAccountCreationForm, ProfileForm
 class FormFieldPlaceHolder(TestCase):
     '''Verify that each widget in UserAccountCreationForm
     has a placeholder attribute.'''
-    
+
     @classmethod
     def setUpTestData(cls):
         cls.test_profile_form = UserAccountCreationForm()
@@ -27,17 +27,17 @@ class FormFieldPlaceHolder(TestCase):
 
 
 class ValidateFormUserEmail(TestCase):
-    '''Verify that a validation error is raised 
+    '''Verify that a validation error is raised
     when a user enters a mismatching email address'''
 
     @classmethod
     def setUpTestData(cls):
         cls.user_form_data = {
-            'username': 'testuser', 
+            'username': 'testuser',
             'first_name': 'test_fn',
-            'last_name': 'test_ln', 
+            'last_name': 'test_ln',
             'email': 'test@email.com',
-            'verify_email': '', 
+            'verify_email': '',
             'password1': 'secretcode',
             'password2': 'secretcode'
         }
@@ -47,32 +47,32 @@ class ValidateFormUserEmail(TestCase):
     def test_invalid_email_error(self):
         self.assertTrue('verify_email' in self.form_errors)
 
+
 class ValidateUserAccountForm(TestCase):
     '''Verify that a new User account is created when
     a User Account Creation page is submitted'''
 
     @classmethod
     def setUpTestData(cls):
-        cls.user_form_data = {
-            'username': 'testuser', 
+        cls.form_data = {
+            'username': 'testuser',
             'first_name': 'test_fn',
-            'last_name': 'test_ln', 
+            'last_name': 'test_ln',
             'email': 'test@email.com',
-            'verify_email': 'test@email.com', 
+            'verify_email': 'test@email.com',
             'password1': 'secretcodecode8#A',
             'password2': 'secretcodecode8#A'
         }
-        cls.test_accountform = UserAccountCreationForm(cls.user_form_data).save()
+        cls.test_accountform = UserAccountCreationForm(cls.form_data).save()
 
     def test_new_user_created(self):
         self.assertIsInstance(self.test_accountform, User)
 
 
-
 class ValidateProfileForm(TestCase):
-    '''Verify that a form field raises a validation 
+    '''Verify that a form field raises a validation
     error when the data passed to the form is invalid.'''
-    
+
     @classmethod
     def setUpTestData(cls):
 
@@ -89,19 +89,23 @@ class ValidateProfileForm(TestCase):
                 content_type="image/jpeg"
             )
         }
-        cls.test_profile_form = ProfileForm(data=cls.current_profile, files=cls.current_files)
+        cls.test_profile_form = ProfileForm(
+            data=cls.current_profile, files=cls.current_files
+        )
         cls.profile_form_errors = cls.test_profile_form.errors
 
     def test_bio_field_invalid_length(self):
         with self.assertRaises(ValidationError) as error:
             validate_bio(self.current_profile['bio'])
-        self.assertEqual(error.exception.message, "Add more detail to your bio.")
+        self.assertEqual(
+            error.exception.message, "Add more detail to your bio."
+        )
 
     def test_birth_field_invalid_date(self):
         with self.assertRaises(ValidationError) as error:
             validate_date(self.current_profile['birth'])
         self.assertIn('Invalid date format', error.exception.message)
-    
+
 
 class ValidateNewPasswordLength(TestCase):
     '''Verify that all password validators are raised when
@@ -110,7 +114,7 @@ class ValidateNewPasswordLength(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.test_user = User.objects.create_user(
-            username='test_user', 
+            username='test_user',
             password='password'
         )
         cls.passwords = {
@@ -125,17 +129,17 @@ class ValidateNewPasswordLength(TestCase):
         '''https://github.com/django/django/blob
         /master/django/contrib/auth/forms.py#L312'''
 
-        '''Django is validating the new password against 
+        '''Django is validating the new password against
         all password validators in settings.AUTH_PASSWORD_VALIDATORS'''
         password_errors = self.password_form.errors.as_data()['new_password2']
         self.assertTrue(
-            any(error.code == "password_too_short") 
+            any(error.code == "password_too_short")
             for error in password_errors
         )
 
 
 class ValidatePasswordCharacters(TestCase):
-    '''Verify that a submitted password that meets character 
+    '''Verify that a submitted password that meets character
     requirements is set as the user's new password.'''
 
     def setUp(self):
@@ -166,8 +170,8 @@ class ValidatePasswordCharacters(TestCase):
             self.test_user, self.new_password
         )
         form_errors = test_password_form.errors.as_data()['new_password2']
-        uppercase_error = any("at least one uppercase letter" 
-                                in error.message for error in form_errors)
+        uppercase_error = any("at least one uppercase letter" in error.message
+                                for error in form_errors)
         self.assertTrue(uppercase_error)
 
     def test_missing_lowercase(self):

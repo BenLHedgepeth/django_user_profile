@@ -52,7 +52,7 @@ class EditUserForm(forms.ModelForm):
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'first_name', 'last_name', 'email')
+        fields = ('first_name', 'last_name', 'email')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

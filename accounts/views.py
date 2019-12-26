@@ -6,8 +6,10 @@ from django.contrib.auth.forms import (
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.forms.models import model_to_dict
+
 from .forms import UserAccountCreationForm, ProfileForm, EditUserForm
 from .models import Profile
 
@@ -22,7 +24,7 @@ def sign_in(request):
                 if user.is_active:
                     login(request, user)
                     return HttpResponseRedirect(
-                        reverse('home')  # TODO: go to profile
+                        reverse("home")  # TODO: go to profile
                     )
                 else:
                     messages.error(
@@ -52,31 +54,31 @@ def sign_up(request):
                 request,
                 "You're now a user! You've been signed in, too."
             )
-            return HttpResponseRedirect(reverse('home'))  # TODO: go to profile
+            return HttpResponseRedirect(reverse("home"))  # TODO: go to profile
     return render(request, 'accounts/sign_up.html', {'form': form})
 
 
 def sign_out(request):
     logout(request)
     messages.success(request, "You've been signed out. Come back soon!")
-    return HttpResponseRedirect(reverse('home'))
+    return HttpResponseRedirect(reverse("home"))
 
 
 @login_required(login_url="/accounts/sign_in/")
-def profile(request, username):
+def profile(request, user_id):
     user = request.user
     try:
-        profile = Profile.objects.get(user=user)
+        profile = Profile.objects.get(id=user.id)
     except Profile.DoesNotExist:
         messages.info(request, "Provide more detail about yourself...")
         return HttpResponseRedirect(
-            reverse("accounts:new_profile", kwargs={'username': username})
+            reverse("accounts:new_profile", kwargs={'user_id': user_id})
         )
     return render(request, 'accounts/profile.html', {'profile': profile})
 
 
 @login_required(login_url="/accounts/sign_in/")
-def new_profile(request, username):
+def new_profile(request, user_id):
     user = request.user
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES)
@@ -84,7 +86,7 @@ def new_profile(request, username):
             form.cleaned_data.update(user=user)
             Profile.objects.create(**form.cleaned_data)
             return HttpResponseRedirect(
-                reverse("accounts:profile", kwargs={'username': username})
+                reverse("accounts:profile", kwargs={'user_id': user_id})
             )
     else:
         form = ProfileForm()
@@ -94,8 +96,8 @@ def new_profile(request, username):
     )
 
 
-@login_required(login_url="/accounts/sign_in")
-def edit_profile(request, username):
+@login_required(login_url="/accounts/sign_in/")
+def edit_profile(request, user_id):
     user = request.user
     user_data = model_to_dict(
         user,
@@ -121,7 +123,7 @@ def edit_profile(request, username):
             else:
                 messages.success(request, "No profile changes applied...")
             return HttpResponseRedirect(
-                reverse('accounts:profile', kwargs={'username': user})
+                reverse("accounts:profile", kwargs={'user_id': user_id})
             )
     else:
         profile_form = ProfileForm(initial=profile_data)
@@ -135,13 +137,29 @@ def edit_profile(request, username):
 
 
 @login_required(login_url="/accounts/sign_in")
-def change_password(request, username):
+def change_password(request, user_id):
+    # import pdb; pdb.set_trace()
     user = request.user
     if request.method == 'POST':
         form = PasswordChangeForm(user, request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Your password is updated!")
-            return HttpResponse(reverse('accounts:home', username=user))
-    form = PasswordChangeForm(user)
+            updated_password = form.cleaned_data['new_password2']
+            if (any(name in updated_password
+                    for name in [user.first_name, user.last_name, user.username])):
+                messages.info(
+                    request,
+                    "Password cannot contain: Username; First Name; Last Name"
+                )
+                return HttpResponseRedirect(
+                    reverse(
+                        "accounts:change_password", kwargs={'user_id': user.id}
+                    )
+                )
+            else:
+                form.save()
+                update_session_auth_hash(request, form.user)
+                messages.success(request, "Your password is updated!")
+                return HttpResponseRedirect(reverse("home"))
+    else:
+        form = PasswordChangeForm(user)
     return render(request, 'accounts/change_password.html', {'form': form})

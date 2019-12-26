@@ -32,4 +32,4 @@ class ProfileInstanceMethods(TestCase):
         self.assertEqual(str(self.profile), "Profile: test_user")
 
     def test_profile_url(self):
-        self.assertEqual(self.profile_url, '/accounts/profile/test_user/')
+        self.assertEqual(self.profile_url, '/accounts/profile/1/')

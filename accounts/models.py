@@ -23,5 +23,5 @@ class Profile(models.Model):
         return f"{self.__class__.__name__}: {username}"
 
     def get_absolute_url(self):
-        profile_user = self.user.username
-        return reverse('accounts:profile', kwargs={'username': profile_user})
+        profile_user = self.user.id
+        return reverse('accounts:profile', kwargs={'user_id': profile_user})

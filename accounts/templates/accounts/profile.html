@@ -19,6 +19,6 @@
 
         <h2>Bio</h2>
         <h3 class="user_info">{{ profile.bio }}</h3>
-        <a class="edit_anchor" href="{% url 'accounts:edit_profile' username=user %}">Edit Profile</a>    
+        <a class="edit_anchor" href="{% url 'accounts:edit_profile' user_id=user.id %}">Edit Profile</a>    
     </div>
 {% endblock %}

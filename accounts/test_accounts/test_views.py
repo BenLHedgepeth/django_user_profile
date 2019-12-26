@@ -1,12 +1,12 @@
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+
 from ..models import Profile
 from ..forms import ProfileForm
 
 
 class RequestSignUpView(TestCase):
-    '''Verify that "GET" and "POST" requests'''
 
     @classmethod
     def setUpTestData(cls):
@@ -76,17 +76,23 @@ class LoginRedirectRequest(TestCase):
 
     def test_redirect_to_login_from_profile_view(self):
         response = self.client.get(
-            reverse("accounts:profile", kwargs={'username': 'testuser'})
+            reverse("accounts:profile", kwargs={'user_id': 1}),
+            follow=True
         )
-        self.assertIn('/accounts/sign_in', response.url)
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, '/accounts/sign_in/?next=/accounts/profile/1/'
+        )
+    #     # self.assertIn('/accounts/sign_in', response.url)
+    #     # self.assertEqual(response.status_code, 302)
 
     def test_redirect_to_login_from_edit_profile_view(self):
         response = self.client.get(
-            reverse("accounts:edit_profile", kwargs={'username': 'testuser'})
+            reverse("accounts:edit_profile", kwargs={'user_id': 1}),
+
         )
-        self.assertIn('/accounts/sign_in', response.url)
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, '/accounts/sign_in/?next=/accounts/profile_edit/1/'
+        )
 
 
 class CreateProfileView(TestCase):
@@ -110,7 +116,7 @@ class CreateProfileView(TestCase):
         response = self.client.post(
             reverse(
                 'accounts:new_profile',
-                kwargs={'username': self.test_user}), data=self.profile_data
+                kwargs={'user_id': 1}), data=self.profile_data
         )
         profile = Profile.objects.filter(user=self.test_user).count()
         self.assertEqual(response.status_code, 302)
@@ -154,11 +160,72 @@ class EditedProfileView(TestCase):
         self.client.force_login(self.test_user)
         response = self.client.post(
             reverse(
-                "accounts:edit_profile", kwargs={'username': self.test_user}
+                "accounts:edit_profile", kwargs={'user_id': 1}
             ),
             data=self.mock_post_data, follow=True
         )
-        print(response)
         self.assertTemplateUsed(response, 'accounts/profile.html')
-        self.assertRedirects(response, '/accounts/profile/testuser/')
+        self.assertRedirects(response, '/accounts/profile/1/')
         self.assertContains(response, 'Lorem ipsum dolor sit amet')
+
+
+class UpdatePasswordTestCase(TestCase):
+    '''Verify that a User receives a message telling them
+    that a new password cannot contain their username, first name,
+    or last name.'''
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.test_user = User.objects.create_user(
+            "test_user", password="Secret*#7_code!",
+            first_name='Fn', last_name='Ln'
+        )
+        cls.new_password = cls.test_user.get_full_name()
+
+        cls.passwords = {
+            'old_password': "Secret*#7_code!",
+            'new_password1': f"{cls.new_password}-{cls.test_user}$8",
+            'new_password2': f"{cls.new_password}-{cls.test_user}$8"
+        }
+
+    def test_password_update_fail(self):
+        self.client.force_login(self.test_user)
+        response = self.client.post(
+            reverse("accounts:change_password", kwargs={'user_id': 1}),
+            data=self.passwords,
+            follow=True
+        )
+        self.assertTemplateUsed(response, 'accounts/change_password.html')
+        self.assertContains(
+            response,
+            "Password cannot contain: Username; First Name; Last Name"
+        )
+
+
+class UpdatePasswordTestCase(TestCase):
+    '''Verify that a User receives a message telling them
+    that their password has changed.'''
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.test_user = User.objects.create_user(
+            "test_user", password="Secret*#7_code!",
+            first_name='Fn', last_name='Ln'
+        )
+        cls.new_password = cls.test_user.get_full_name()
+
+        cls.passwords = {
+            'old_password': "Secret*#7_code!",
+            'new_password1': "SeCretPa$$word6*",
+            'new_password2': "SeCretPa$$word6*"
+        }
+
+    def test_password_update_fail(self):
+        self.client.force_login(self.test_user)
+        response = self.client.post(
+            reverse("accounts:change_password", kwargs={'user_id': 1}),
+            data=self.passwords,
+            follow=True
+        )
+        self.assertTemplateUsed(response, 'home.html')
+        self.assertContains(response, "Your password is updated!")

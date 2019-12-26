@@ -51,8 +51,8 @@
                                 In</a></li>
                         {% else %}
                             <!-- view profile link here? -->
-                            <li><a href="{% url 'accounts:profile' username=user %}">My Profile</a></li>
-                            <li><a href="{% url 'accounts:change_password' username=user  %}">Change Password</a></li>
+                            <li><a href="{% url 'accounts:profile' user_id=user.id %}">My Profile</a></li>
+                            <li><a href="{% url 'accounts:change_password' user_id=user.id  %}">Change Password</a></li>
                             <!-- edit profile link here? -->
                             <li><a href="{% url 'accounts:sign_out' %}">Sign Out</a></li>
                         {% endif %}
@@ -65,7 +65,7 @@
 
 <div class="bounds circle--page">
     {% if messages %}
-        <ul class="messages centered grid-30">
+        <ul class="messages centered grid-60">
             {% for message in messages %}
                 <li{% if message.tags %}
                     class="{{ message.tags }}"{% endif %}>{{ message }}</li>
