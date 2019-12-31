@@ -24,4 +24,4 @@ class Profile(models.Model):
 
     def get_absolute_url(self):
         profile_user = self.user.id
-        return reverse('accounts:profile', kwargs={'user_id': profile_user})
+        return reverse('accounts:profile')

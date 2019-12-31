@@ -4,7 +4,7 @@ from django.contrib.auth.forms import (
     AuthenticationForm, UserCreationForm, PasswordChangeForm
 )
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -65,20 +65,20 @@ def sign_out(request):
 
 
 @login_required(login_url="/accounts/sign_in/")
-def profile(request, user_id):
+def profile(request):
     user = request.user
     try:
         profile = Profile.objects.get(id=user.id)
     except Profile.DoesNotExist:
         messages.info(request, "Provide more detail about yourself...")
         return HttpResponseRedirect(
-            reverse("accounts:new_profile", kwargs={'user_id': user_id})
+            reverse("accounts:new_profile")
         )
     return render(request, 'accounts/profile.html', {'profile': profile})
 
 
 @login_required(login_url="/accounts/sign_in/")
-def new_profile(request, user_id):
+def new_profile(request):
     user = request.user
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES)
@@ -86,7 +86,7 @@ def new_profile(request, user_id):
             form.cleaned_data.update(user=user)
             Profile.objects.create(**form.cleaned_data)
             return HttpResponseRedirect(
-                reverse("accounts:profile", kwargs={'user_id': user_id})
+                reverse("accounts:profile")
             )
     else:
         form = ProfileForm()
@@ -97,7 +97,7 @@ def new_profile(request, user_id):
 
 
 @login_required(login_url="/accounts/sign_in/")
-def edit_profile(request, user_id):
+def edit_profile(request):
     user = request.user
     user_data = model_to_dict(
         user,
@@ -123,7 +123,7 @@ def edit_profile(request, user_id):
             else:
                 messages.success(request, "No profile changes applied...")
             return HttpResponseRedirect(
-                reverse("accounts:profile", kwargs={'user_id': user_id})
+                reverse("accounts:profile")
             )
     else:
         profile_form = ProfileForm(initial=profile_data)
@@ -137,22 +137,26 @@ def edit_profile(request, user_id):
 
 
 @login_required(login_url="/accounts/sign_in")
-def change_password(request, user_id):
+def change_password(request):
     # import pdb; pdb.set_trace()
     user = request.user
     if request.method == 'POST':
         form = PasswordChangeForm(user, request.POST)
         if form.is_valid():
             updated_password = form.cleaned_data['new_password2']
+            user_identity = [user.first_name, user.last_name, user.username]
+            alternative_identities = [name.title() if name.islower() else name.lower() for name in user_identity]
+            user_identity.extend(list(alternative_identities))
+
             if (any(name in updated_password
-                    for name in [user.first_name, user.last_name, user.username])):
+                    for name in user_identity)):
                 messages.info(
                     request,
                     "Password cannot contain: Username; First Name; Last Name"
                 )
                 return HttpResponseRedirect(
                     reverse(
-                        "accounts:change_password", kwargs={'user_id': user.id}
+                        "accounts:change_password"
                     )
                 )
             else:

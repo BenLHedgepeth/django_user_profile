@@ -26,10 +26,7 @@ class ProfileInstanceMethods(TestCase):
         }
 
         cls.profile = Profile.objects.create(**cls.profile_data)
-        cls.profile_url = cls.profile.get_absolute_url()
 
     def test_profile_str(self):
         self.assertEqual(str(self.profile), "Profile: test_user")
 
-    def test_profile_url(self):
-        self.assertEqual(self.profile_url, '/accounts/profile/1/')

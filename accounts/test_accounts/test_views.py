@@ -21,16 +21,14 @@ class RequestSignUpView(TestCase):
         }
 
     def test_get_sign_up_view(self):
-        response = self.client.get(
-            reverse("accounts:sign_up")
-        )
-
+        response = self.client.get(reverse("accounts:sign_up"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/sign_up.html', count=1)
 
     def test_post_sign_up_view(self):
         response = self.client.post(
-            reverse("accounts:sign_up"), data=self.test_post_data, follow=True
+            reverse("accounts:sign_up"), 
+            data=self.test_post_data, follow=True
         )
         expected_url = response.request.get('PATH_INFO')
         self.assertRedirects(response, expected_url)
@@ -57,7 +55,8 @@ class RequestSignInView(TestCase):
         self.client.login(**self.user_data)
         '''Setting `follow=True` returns the endpoint for the response'''
         response = self.client.post(
-            reverse('accounts:sign_in'), self.user_data, follow=True
+            reverse('accounts:sign_in'), 
+            self.user_data, follow=True
         )
         self.assertRedirects(response, reverse('home'))
         self.assertContains(response, self.test_user)
@@ -76,22 +75,19 @@ class LoginRedirectRequest(TestCase):
 
     def test_redirect_to_login_from_profile_view(self):
         response = self.client.get(
-            reverse("accounts:profile", kwargs={'user_id': 1}),
+            reverse("accounts:profile"),
             follow=True
         )
         self.assertRedirects(
-            response, '/accounts/sign_in/?next=/accounts/profile/1/'
+            response, '/accounts/sign_in/?next=/accounts/profile/'
         )
     #     # self.assertIn('/accounts/sign_in', response.url)
     #     # self.assertEqual(response.status_code, 302)
 
     def test_redirect_to_login_from_edit_profile_view(self):
-        response = self.client.get(
-            reverse("accounts:edit_profile", kwargs={'user_id': 1}),
-
-        )
+        response = self.client.get(reverse("accounts:edit_profile"))
         self.assertRedirects(
-            response, '/accounts/sign_in/?next=/accounts/profile_edit/1/'
+            response, '/accounts/sign_in/?next=/accounts/profile_edit/'
         )
 
 
@@ -114,9 +110,7 @@ class CreateProfileView(TestCase):
     def test_find(self):
         self.client.force_login(self.test_user)
         response = self.client.post(
-            reverse(
-                'accounts:new_profile',
-                kwargs={'user_id': 1}), data=self.profile_data
+            reverse('accounts:new_profile'), data=self.profile_data
         )
         profile = Profile.objects.filter(user=self.test_user).count()
         self.assertEqual(response.status_code, 302)
@@ -159,13 +153,11 @@ class EditedProfileView(TestCase):
     def test_edited_profile_displays_new_profile(self):
         self.client.force_login(self.test_user)
         response = self.client.post(
-            reverse(
-                "accounts:edit_profile", kwargs={'user_id': 1}
-            ),
+            reverse("accounts:edit_profile"),
             data=self.mock_post_data, follow=True
         )
         self.assertTemplateUsed(response, 'accounts/profile.html')
-        self.assertRedirects(response, '/accounts/profile/1/')
+        self.assertRedirects(response, '/accounts/profile/')
         self.assertContains(response, 'Lorem ipsum dolor sit amet')
 
 
@@ -191,7 +183,7 @@ class UpdatePasswordTestCase(TestCase):
     def test_password_update_fail(self):
         self.client.force_login(self.test_user)
         response = self.client.post(
-            reverse("accounts:change_password", kwargs={'user_id': 1}),
+            reverse("accounts:change_password"),
             data=self.passwords,
             follow=True
         )
@@ -223,7 +215,7 @@ class UpdatePasswordTestCase(TestCase):
     def test_password_update_fail(self):
         self.client.force_login(self.test_user)
         response = self.client.post(
-            reverse("accounts:change_password", kwargs={'user_id': 1}),
+            reverse("accounts:change_password"),
             data=self.passwords,
             follow=True
         )

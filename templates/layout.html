@@ -51,8 +51,8 @@
                                 In</a></li>
                         {% else %}
                             <!-- view profile link here? -->
-                            <li><a href="{% url 'accounts:profile' user_id=user.id %}">My Profile</a></li>
-                            <li><a href="{% url 'accounts:change_password' user_id=user.id  %}">Change Password</a></li>
+                            <li><a href="{% url 'accounts:profile' %}">My Profile</a></li>
+                            <li><a href="{% url 'accounts:change_password' %}">Change Password</a></li>
                             <!-- edit profile link here? -->
                             <li><a href="{% url 'accounts:sign_out' %}">Sign Out</a></li>
                         {% endif %}

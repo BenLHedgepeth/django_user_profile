@@ -2,7 +2,7 @@
 
 
 {% block body %}
-    <form enctype="multipart/form-data" action="{% url 'accounts:new_profile' user_id=user.id %}" method="post">
+    <form enctype="multipart/form-data" action="{% url 'accounts:new_profile' %}" method="post">
         {% csrf_token %}
         {{ form }}
         <button type="submit">Submit</button>
